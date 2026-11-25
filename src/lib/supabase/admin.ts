@@ -1,18 +1,15 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
+import { getServerEnv, publicEnv } from "@/lib/env";
+import type { Database } from "@/types/database";
 
 export function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const { supabaseServiceRoleKey } = getServerEnv();
 
-  if (!url || !serviceRoleKey) {
-    throw new Error("Supabase service role env is not set");
-  }
-
-  return createClient(url, serviceRoleKey, {
+  return createClient<Database>(publicEnv.supabaseUrl, supabaseServiceRoleKey, {
     auth: {
-      persistSession: false,
       autoRefreshToken: false,
+      persistSession: false,
     },
   });
 }

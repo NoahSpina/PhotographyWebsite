@@ -1,0 +1,28 @@
+---
+description: Core architecture, security boundaries, and coding standards for the photography booking, proofing, and digital delivery platform.
+globs: "**/*"
+alwaysApply: true
+---
+
+# Project Rules — Photography Platform
+
+## Stack & Architecture
+- **Frontend & API:** Next.js (App Router, TypeScript, Tailwind CSS) in `src/`, deployed on Vercel.
+- **Database & Auth:** Supabase (PostgreSQL + Supabase Auth via `@supabase/ssr`).
+- **Storage & CDN:** Private AWS S3 bucket (`/masters/` for raw high-res files, `/proofs/` for watermarked display assets) + AWS CloudFront pointing **only** to `/proofs/*`.
+- **Image Processing:** Isolated AWS Lambda in `aws/lambda/watermark/` using `sharp` and `@aws-sdk/client-s3`. Keep completely decoupled from the root Next.js build.
+- **Payments:** Stripe Checkout + verified Stripe Webhooks.
+
+## Non-Negotiable Security & Data Rules
+1. **Never proxy photo uploads or downloads through Next.js API routes.** Always issue short-lived S3 pre-signed PUT/GET URLs so browsers transfer files directly to/from S3.
+2. **Never expose `/masters/*` via CloudFront or public URLs.** Clean high-res masters are served strictly via time-limited S3 pre-signed GET URLs after server-side entitlement verification.
+3. **Never trust client redirects for payment confirmation.** Order status and download quotas may ONLY be updated inside `/api/stripe/webhook` after verifying `Stripe-Signature`.
+4. **Enforce RBAC in both code and database.** Use Supabase Row-Level Security (RLS) on every table AND verify `profiles.role === 'admin'` server-side on all admin API routes and actions.
+5. **Keep `SUPABASE_SERVICE_ROLE_KEY`, `AWS_SECRET_ACCESS_KEY`, and `STRIPE_SECRET_KEY` strictly server-side.** Never import `src/lib/supabase/admin.ts` into Client Components (`'use client'`).
+6. **Watermarking happens in Lambda, never via CSS alone.** Client-side protections (`contextmenu`, `user-select: none`) are secondary speed bumps only.
+
+## Workflow & Code Hygiene (16 GB RAM Friendly)
+- Stay strictly within the scope of the current phase prompt. Do not scaffold or implement future phases prematurely.
+- Prefer Server Components by default; add `'use client'` only for interactive components (uploaders, proofing selectors, forms).
+- Use strict TypeScript with generated Supabase types (`src/types/database.ts`). Avoid `any`.
+- After every task, run `npx tsc --noEmit` and `npm run lint` to verify zero errors before finishing.

@@ -1,12 +1,10 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { publicEnv } from "@/lib/env";
+import type { Database } from "@/types/database";
 
 export function createClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anonKey) {
-    throw new Error("Supabase browser env is not set");
-  }
-
-  return createBrowserClient(url, anonKey);
+  return createBrowserClient<Database>(
+    publicEnv.supabaseUrl,
+    publicEnv.supabaseAnonKey,
+  );
 }
