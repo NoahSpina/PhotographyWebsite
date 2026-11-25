@@ -11,10 +11,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
 function AdminFallback() {
   return (
-    <div className="min-h-full">
-      <header className="border-b border-neutral-200 dark:border-neutral-800">
-        <div className="mx-auto flex max-w-5xl items-center px-6 py-4">
-          <p className="text-sm font-medium tracking-wide">Studio</p>
+    <div className="min-h-full bg-alabaster text-ink">
+      <header className="border-b border-hairline">
+        <div className="mx-auto flex max-w-5xl items-center px-5 py-4">
+          <p className="font-serif text-2xl font-light">
+            Luke <span className="italic">Studio</span>
+          </p>
         </div>
       </header>
     </div>

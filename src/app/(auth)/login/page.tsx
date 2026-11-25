@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { loginErrorMessage, safeInternalPath } from "@/lib/auth/paths";
 import { LoginForm } from "./login-form";
+
+export const metadata: Metadata = {
+  title: "Sign in",
+};
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -13,9 +18,12 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-6 py-16">
-          <h1 className="text-3xl font-semibold tracking-tight">Sign in</h1>
-        </main>
+        <div className="grid min-h-dvh flex-1 lg:grid-cols-2">
+          <div className="min-h-56 bg-charcoal lg:min-h-dvh" />
+          <main className="flex flex-col justify-center bg-alabaster px-6 py-16">
+            <h1 className="font-serif text-5xl font-light">Sign in</h1>
+          </main>
+        </div>
       }
     >
       <LoginContent searchParams={searchParams} />

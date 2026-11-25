@@ -13,7 +13,7 @@ export function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex items-center gap-5 text-sm">
+    <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
       {links.map((link) => {
         const active =
           link.href === "/admin"
@@ -25,11 +25,9 @@ export function AdminNav() {
             key={link.href}
             href={link.href}
             aria-current={active ? "page" : undefined}
-            className={
-              active
-                ? "text-neutral-950 dark:text-neutral-50"
-                : "text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-50"
-            }
+            className={`eyebrow transition-colors duration-500 ${
+              active ? "text-ink" : "text-stone hover:text-ink"
+            }`}
           >
             {link.label}
           </Link>

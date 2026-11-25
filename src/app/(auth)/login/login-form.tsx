@@ -1,9 +1,17 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { Wordmark } from "@/components/layout/Wordmark";
+import { buttonClass } from "@/components/ui/button-styles";
 import { destinationAfterSignIn, safeInternalPath } from "@/lib/auth/paths";
+import { siteConfig } from "@/lib/site-config";
 import { createClient } from "@/lib/supabase/client";
+
+const fieldClass =
+  "mt-3 w-full border border-hairline bg-transparent px-4 py-3 text-sm text-ink outline-none transition-colors duration-500 focus:border-espresso";
 
 type LoginFormProps = {
   next: string | null;
@@ -76,70 +84,102 @@ export function LoginForm({ next, initialError }: LoginFormProps) {
 
   const busy = pending !== null;
 
+  const portrait = siteConfig.clientAccess;
+
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-6 py-16">
-      <p className="text-xs tracking-[0.2em] text-neutral-500 uppercase">Studio</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight">Sign in</h1>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-        Studio accounts use a password. Clients can use a password or a one-time
-        email link.
-      </p>
-
-      <form onSubmit={handlePasswordSignIn} className="mt-8 space-y-4">
-        <label className="block text-sm">
-          <span className="mb-1.5 block">Email</span>
-          <input
-            type="email"
-            name="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 outline-none focus:border-neutral-900 dark:border-neutral-700 dark:focus:border-neutral-200"
-          />
-        </label>
-
-        <label className="block text-sm">
-          <span className="mb-1.5 block">Password</span>
-          <input
-            type="password"
-            name="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 outline-none focus:border-neutral-900 dark:border-neutral-700 dark:focus:border-neutral-200"
-          />
-        </label>
-
-        {error ? (
-          <p role="alert" className="text-sm text-red-700 dark:text-red-400">
-            {error}
+    <div className="grid min-h-dvh flex-1 bg-alabaster lg:grid-cols-2">
+      <div className="relative h-64 sm:h-80 lg:h-auto lg:min-h-dvh">
+        <Image
+          src={portrait.image.src}
+          alt={portrait.image.alt}
+          fill
+          priority
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/75 via-charcoal/20 to-charcoal/30" />
+        <div className="absolute inset-x-0 bottom-0 hidden p-10 text-alabaster lg:block xl:p-14">
+          <p className="eyebrow text-alabaster/70">{portrait.eyebrow}</p>
+          <p className="mt-6 max-w-md font-serif text-4xl font-light italic leading-tight">
+            {portrait.quote}
           </p>
-        ) : null}
-        {notice ? (
-          <p role="status" className="text-sm text-neutral-700 dark:text-neutral-300">
-            {notice}
-          </p>
-        ) : null}
+        </div>
+      </div>
 
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm text-white disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900"
-        >
-          {pending === "password" ? "Signing in…" : "Sign in"}
-        </button>
-        <button
-          type="button"
-          onClick={handleMagicLink}
-          disabled={busy}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-neutral-700"
-        >
-          {pending === "magic" ? "Sending link…" : "Email me a sign-in link"}
-        </button>
-      </form>
-    </main>
+      <main className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 xl:px-24">
+        <Wordmark />
+        <p className="eyebrow mt-10 text-stone">Client & studio access</p>
+        <h1 className="mt-4 font-serif text-5xl font-light leading-none tracking-[-0.03em] sm:text-6xl">
+          Sign in
+        </h1>
+        <p className="mt-5 max-w-sm text-sm leading-relaxed text-stone">
+          Studio accounts use a password. Clients can use a password or a one-time email link.
+        </p>
+
+        <form onSubmit={handlePasswordSignIn} className="mt-10 max-w-md space-y-6">
+          <label className="block">
+            <span className="eyebrow text-stone">Email</span>
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className={fieldClass}
+            />
+          </label>
+
+          <label className="block">
+            <span className="eyebrow text-stone">Password</span>
+            <input
+              type="password"
+              name="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className={fieldClass}
+            />
+          </label>
+
+          {error ? (
+            <p role="alert" className="text-sm text-red-800">
+              {error}
+            </p>
+          ) : null}
+          {notice ? (
+            <p role="status" className="border-l border-clay pl-4 text-sm text-ink">
+              {notice}
+            </p>
+          ) : null}
+
+          <div className="flex flex-col gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={busy}
+              className={buttonClass({ size: "lg", className: "w-full" })}
+            >
+              {pending === "password" ? "Signing in…" : "Sign in"}
+            </button>
+            <button
+              type="button"
+              onClick={handleMagicLink}
+              disabled={busy}
+              className={buttonClass({ variant: "outline", size: "lg", className: "w-full" })}
+            >
+              {pending === "magic" ? "Sending link…" : "Email me a sign-in link"}
+            </button>
+          </div>
+        </form>
+
+        <p className="mt-10 text-sm text-stone">
+          <Link href="/" className="cursor-pointer text-ink">
+            <span className="underline-draw">Return to the studio</span>
+          </Link>
+        </p>
+      </main>
+    </div>
   );
 }
 

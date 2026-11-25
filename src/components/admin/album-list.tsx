@@ -13,12 +13,12 @@ export function AlbumList({ albums }: { albums: AlbumListItem[] }) {
   }
 
   return (
-    <ul className="divide-y divide-neutral-200 rounded-md border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+    <ul className="divide-y divide-hairline border border-hairline">
       {albums.map((album) => (
         <li key={album.id}>
           <Link
             href={`/admin/albums/${album.id}`}
-            className="flex cursor-pointer items-center justify-between gap-4 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+            className="flex cursor-pointer items-center justify-between gap-4 px-4 py-3.5 transition-colors duration-500 hover:bg-linen"
           >
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{album.title}</p>

@@ -1,28 +1,166 @@
 @import "tailwindcss";
 
+/* One light brand theme. The `dark:` utilities already in the admin and
+   proofing components stay inert unless a `.dark` class is added. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf8f5;
+  --foreground: #171614;
+  color-scheme: light;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-cormorant), ui-serif, Georgia, "Times New Roman", serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  --color-alabaster: #faf8f5;
+  --color-linen: #f2eee8;
+  --color-charcoal: #141413;
+  --color-ink: #171614;
+  --color-stone: #6b665e;
+  --color-hairline: #e5dfd6;
+  --color-espresso: #2c2621;
+  --color-clay: #8c6a4a;
+
+  /* Tailwind's neutral scale retuned to warm stone, so every existing
+     neutral-* utility (admin, proofing gallery) inherits the palette. */
+  --color-neutral-50: #f7f4ef;
+  --color-neutral-100: #f2eee8;
+  --color-neutral-200: #e5dfd6;
+  --color-neutral-300: #d4cbbf;
+  --color-neutral-400: #a69d91;
+  --color-neutral-500: #6b665e;
+  --color-neutral-600: #57524b;
+  --color-neutral-700: #403b35;
+  --color-neutral-800: #2c2621;
+  --color-neutral-900: #171614;
+  --color-neutral-950: #0f0e0d;
+
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-scroll-cue: scroll-cue 2.6s var(--ease-luxe) infinite;
+  --animate-rise: rise 1.4s var(--ease-luxe) both;
+
+  @keyframes scroll-cue {
+    from {
+      transform: translate3d(0, -100%, 0);
+    }
+    to {
+      transform: translate3d(0, 200%, 0);
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 1.5rem, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+}
+
+/* Reads --marquee-duration on the element itself, so it can't live in @theme. */
+@utility animate-marquee {
+  animation: marquee var(--marquee-duration, 120s) linear infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@utility container-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 96rem;
+  padding-inline: 1.25rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 2rem;
+  }
+
+  @media (width >= 80rem) {
+    padding-inline: 3.5rem;
+  }
+}
+
+@utility eyebrow {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+@layer base {
+  html {
+    scroll-padding-top: 6rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+  }
+
+  h1 {
+    font-size: clamp(2.5rem, 5vw, 3.75rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-clay) 22%, transparent);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 1.5px solid var(--color-clay);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .underline-draw {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    transition: background-size 700ms var(--ease-luxe);
+  }
+
+  .group:focus-visible .underline-draw,
+  .group:focus-within .underline-draw {
+    background-size: 100% 1px;
+  }
+
+  @media (hover: hover) {
+    .group:hover .underline-draw,
+    .underline-draw:hover {
+      background-size: 100% 1px;
+    }
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 button,
@@ -37,4 +175,78 @@ button:disabled,
 
 html:has(dialog[open]) {
   overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Nav sits transparent over hero photographs and frosts everywhere else. */
+.nav-tone,
+.nav-tone-muted,
+.nav-cta {
+  transition-property: color, background-color, border-color;
+  transition-duration: 700ms;
+  transition-timing-function: var(--ease-luxe);
+}
+
+.nav-tone {
+  color: var(--color-ink);
+}
+
+.nav-tone-muted {
+  color: var(--color-stone);
+}
+
+@media (hover: hover) {
+  .nav-tone-muted:hover {
+    color: var(--color-ink);
+  }
+}
+
+[data-nav][data-scrolled="true"],
+body:not(:has([data-hero-overlay])) [data-nav] {
+  border-color: var(--color-hairline);
+  background-color: color-mix(in oklab, var(--color-alabaster) 84%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  backdrop-filter: blur(18px) saturate(1.5);
+}
+
+body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-tone,
+body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-tone-muted,
+body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-tone-muted:hover {
+  color: var(--color-alabaster);
+}
+
+body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-mark {
+  background-color: var(--color-alabaster);
+}
+
+body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-cta {
+  background-color: var(--color-alabaster);
+  color: var(--color-ink);
+}
+
+body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-cta:hover {
+  background-color: var(--color-clay);
+  color: var(--color-alabaster);
+}
+
+.marquee-track:hover,
+.marquee-track:focus-within,
+.marquee-track[data-paused="true"] {
+  animation-play-state: paused;
 }

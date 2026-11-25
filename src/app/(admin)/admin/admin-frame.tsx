@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import { Wordmark } from "@/components/layout/Wordmark";
+import { buttonClass } from "@/components/ui/button-styles";
 import { signOut } from "./actions";
 import { AdminNav } from "./admin-nav";
 import { createClient } from "@/lib/supabase/server";
@@ -29,27 +31,24 @@ export async function AdminFrame({ children }: { children: React.ReactNode }) {
   const label = profile.full_name?.trim() || profile.email || "Admin";
 
   return (
-    <div className="min-h-full">
-      <header className="border-b border-neutral-200 dark:border-neutral-800">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-4">
-          <div className="flex items-center gap-8">
-            <p className="text-sm font-medium tracking-wide">Studio</p>
+    <div className="min-h-full bg-alabaster text-ink">
+      <header className="border-b border-hairline">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-8 gap-y-3 px-5 py-4">
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+            <Wordmark />
             <AdminNav />
           </div>
           <div className="flex items-center gap-4">
-            <p className="hidden text-sm text-neutral-500 sm:block">{label}</p>
+            <p className="hidden text-sm text-stone sm:block">{label}</p>
             <form action={signOut}>
-              <button
-                type="submit"
-                className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
-              >
+              <button type="submit" className={buttonClass({ variant: "outline", size: "sm" })}>
                 Sign out
               </button>
             </form>
           </div>
         </div>
       </header>
-      <div className="mx-auto max-w-5xl px-6 py-8">{children}</div>
+      <div className="mx-auto max-w-5xl px-5 py-10">{children}</div>
     </div>
   );
 }
