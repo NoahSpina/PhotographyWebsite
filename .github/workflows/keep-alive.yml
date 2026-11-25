@@ -1,0 +1,18 @@
+# Ready to enable. Uncomment to ping /api/health every 4 days so the
+# Supabase project is less likely to pause for inactivity.
+#
+# name: keep-alive
+#
+# on:
+#   schedule:
+#     - cron: "0 12 */4 * *"
+#   workflow_dispatch:
+#
+# jobs:
+#   ping:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Ping health endpoint
+#         run: curl --fail --silent --show-error "${APP_URL}/api/health"
+#         env:
+#           APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
