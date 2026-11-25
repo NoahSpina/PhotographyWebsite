@@ -13,6 +13,30 @@ export function safeInternalPath(value: string | null | undefined): string | nul
   return value;
 }
 
+/**
+ * Email templates pass `{{ .RedirectTo }}`, which is an absolute URL.
+ * Accept it only when it points at one of our own origins.
+ */
+export function internalPathFromRedirect(
+  value: string | null | undefined,
+  allowedOrigins: readonly string[],
+): string | null {
+  if (!value) return null;
+
+  const relative = safeInternalPath(value);
+  if (relative) return relative;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return null;
+  }
+
+  if (!allowedOrigins.includes(parsed.origin)) return null;
+  return safeInternalPath(`${parsed.pathname}${parsed.search}`);
+}
+
 export function destinationAfterSignIn(input: {
   role: Role | null;
   albumId: string | null;
