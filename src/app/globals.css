@@ -194,7 +194,9 @@ html:has(dialog[open]) {
   }
 }
 
-/* Nav sits transparent over hero photographs and frosts everywhere else. */
+/* Nav sits transparent over a visible hero and frosts everywhere else.
+   Cached routes stay in the DOM inside a hidden React Activity
+   (inline display: none !important). Those heroes must not lighten the nav. */
 .nav-tone,
 .nav-tone-muted,
 .nav-cta {
@@ -218,29 +220,29 @@ html:has(dialog[open]) {
 }
 
 [data-nav][data-scrolled="true"],
-body:not(:has([data-hero-overlay])) [data-nav] {
+body:not(:has([data-hero-overlay]:not([style*="display: none"]):not([style*="display:none"]))) [data-nav] {
   border-color: var(--color-hairline);
   background-color: color-mix(in oklab, var(--color-alabaster) 84%, transparent);
   -webkit-backdrop-filter: blur(18px) saturate(1.5);
   backdrop-filter: blur(18px) saturate(1.5);
 }
 
-body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-tone,
-body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-tone-muted,
-body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-tone-muted:hover {
+body:has([data-hero-overlay]:not([style*="display: none"]):not([style*="display:none"])) [data-nav][data-scrolled="false"] .nav-tone,
+body:has([data-hero-overlay]:not([style*="display: none"]):not([style*="display:none"])) [data-nav][data-scrolled="false"] .nav-tone-muted,
+body:has([data-hero-overlay]:not([style*="display: none"]):not([style*="display:none"])) [data-nav][data-scrolled="false"] .nav-tone-muted:hover {
   color: var(--color-alabaster);
 }
 
-body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-mark {
+body:has([data-hero-overlay]:not([style*="display: none"]):not([style*="display:none"])) [data-nav][data-scrolled="false"] .nav-mark {
   background-color: var(--color-alabaster);
 }
 
-body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-cta {
+body:has([data-hero-overlay]:not([style*="display: none"]):not([style*="display:none"])) [data-nav][data-scrolled="false"] .nav-cta {
   background-color: var(--color-alabaster);
   color: var(--color-ink);
 }
 
-body:has([data-hero-overlay]) [data-nav][data-scrolled="false"] .nav-cta:hover {
+body:has([data-hero-overlay]:not([style*="display: none"]):not([style*="display:none"])) [data-nav][data-scrolled="false"] .nav-cta:hover {
   background-color: var(--color-clay);
   color: var(--color-alabaster);
 }
