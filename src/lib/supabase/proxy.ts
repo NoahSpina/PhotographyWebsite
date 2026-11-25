@@ -1,0 +1,97 @@
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+import { publicEnv } from "@/lib/env";
+import type { Database } from "@/types/database";
+
+const AUTH_CACHE_HEADERS = ["cache-control", "expires", "pragma"] as const;
+
+/**
+ * Refreshes the Supabase auth cookies, then applies route guards.
+ *
+ * The JWT `role` claim is the Postgres role (`authenticated`), not the
+ * studio role. Admin access is read from `profiles.role`.
+ */
+export async function updateSession(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request });
+
+  const supabase = createServerClient<Database>(
+    publicEnv.supabaseUrl,
+    publicEnv.supabaseAnonKey,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet, headers) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => {
+            supabaseResponse.cookies.set(name, value, options);
+          });
+          Object.entries(headers).forEach(([key, value]) => {
+            supabaseResponse.headers.set(key, value);
+          });
+        },
+      },
+    },
+  );
+
+  // Nothing else may run between creating the client and getClaims().
+  // getClaims() validates the JWT and refreshes it when it is near expiry.
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims.sub;
+
+  const { pathname } = request.nextUrl;
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isGalleryRoute =
+    pathname === "/gallery" || pathname.startsWith("/gallery/");
+
+  if ((isAdminRoute || isGalleryRoute) && !userId) {
+    return redirectToLogin(request, supabaseResponse);
+  }
+
+  if (isAdminRoute && userId) {
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Admin route guard could not read the profile:", error.message);
+    }
+
+    if (error || profile?.role !== "admin") {
+      return redirectToLogin(request, supabaseResponse, "forbidden");
+    }
+  }
+
+  return supabaseResponse;
+}
+
+function redirectToLogin(
+  request: NextRequest,
+  sessionResponse: NextResponse,
+  errorCode?: "forbidden",
+) {
+  const url = request.nextUrl.clone();
+  const next = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+  url.pathname = "/login";
+  url.search = "";
+  url.searchParams.set("next", next);
+  if (errorCode) {
+    url.searchParams.set("error", errorCode);
+  }
+
+  const redirectResponse = NextResponse.redirect(url);
+  sessionResponse.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie);
+  });
+  for (const header of AUTH_CACHE_HEADERS) {
+    const value = sessionResponse.headers.get(header);
+    if (value) redirectResponse.headers.set(header, value);
+  }
+  return redirectResponse;
+}

@@ -1,17 +1,19 @@
-export type Role = "photographer" | "client";
+import type { Database } from "@/types/database";
 
-export type Album = {
-  id: string;
-  title: string;
-};
+export type {
+  AlbumStatus,
+  Json,
+  OrderStatus,
+  OrderType,
+  PhotoStatus,
+  UserRole,
+} from "@/types/database";
 
-export type Photo = {
-  id: string;
-  albumId: string;
-  storageKey: string;
-};
+export type Role = Database["public"]["Tables"]["profiles"]["Row"]["role"];
 
-export type Order = {
-  id: string;
-  status: string;
-};
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type Package = Database["public"]["Tables"]["packages"]["Row"];
+export type Album = Database["public"]["Tables"]["albums"]["Row"];
+export type Photo = Database["public"]["Tables"]["photos"]["Row"];
+export type Selection = Database["public"]["Tables"]["selections"]["Row"];
+export type Order = Database["public"]["Tables"]["orders"]["Row"];

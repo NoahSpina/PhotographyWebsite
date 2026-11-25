@@ -1,0 +1,13 @@
+---
+description: Buttons use a pointer cursor on hover.
+globs: "**/*.{tsx,css}"
+alwaysApply: true
+---
+
+# Buttons
+
+Every button shows a pointer cursor when hovered.
+
+- Native `<button>` and `[role="button"]` already get this from `src/app/globals.css`. Do not set `cursor-default` or `cursor-auto` on them.
+- A clickable control that is not a `<button>` (a link or other element styled as a button) gets `cursor-pointer`.
+- Disabled buttons use `cursor-not-allowed`. Do not leave a disabled button on the default arrow cursor.

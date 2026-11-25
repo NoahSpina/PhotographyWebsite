@@ -20,8 +20,8 @@ export async function createClient() {
               cookieStore.set(name, value, options);
             }
           } catch {
-            // Server Components cannot write cookies. Route Handlers can.
-            // Session refresh writes cookies from middleware once auth is wired.
+            // Server Components cannot write cookies. The proxy refreshes
+            // the session and applies the cache headers on the response.
           }
         },
       },
