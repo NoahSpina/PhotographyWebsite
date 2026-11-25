@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { cacheLife } from "next/cache";
+import { Suspense } from "react";
+import { FooterAccountFallback, FooterAccountLink } from "@/components/layout/site-account";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { buttonClass } from "@/components/ui/button-styles";
 import { Reveal } from "@/components/ui/Reveal";
@@ -59,7 +61,9 @@ export function Footer() {
 
           <FooterColumn title="Studio" className="lg:col-span-2">
             <FooterLink href="/book">Book a Session</FooterLink>
-            <FooterLink href="/login">Client Login</FooterLink>
+            <Suspense fallback={<FooterAccountFallback />}>
+              <FooterAccountLink />
+            </Suspense>
             <li>
               <a
                 href={contact.phoneHref}

@@ -1,8 +1,13 @@
+"use client";
+
+import Link from "next/link";
+import { signOut } from "@/lib/auth/sign-out";
 import type { GalleryQuota } from "@/lib/gallery/types";
 
 export type GalleryFilter = "all" | "selected";
 
 type GalleryTopBarProps = {
+  signedInName: string | null;
   title: string;
   shootDateLabel: string | null;
   photoCount: number;
@@ -16,6 +21,7 @@ type GalleryTopBarProps = {
 };
 
 export function GalleryTopBar({
+  signedInName,
   title,
   shootDateLabel,
   photoCount,
@@ -35,6 +41,7 @@ export function GalleryTopBar({
     <header className="sticky top-0 z-30 border-b border-neutral-200 bg-background/90 backdrop-blur dark:border-neutral-800">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
         <div className="min-w-56 flex-1">
+          {signedInName ? <p className="text-sm text-neutral-500">Hello, {signedInName}</p> : null}
           <h1 className="truncate text-lg font-semibold tracking-tight">{title}</h1>
           <p className="text-sm text-neutral-500">{details}</p>
         </div>
@@ -74,6 +81,21 @@ export function GalleryTopBar({
           >
             Download Selected
           </button>
+
+          <Link
+            href="/"
+            className="cursor-pointer px-1 text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-50"
+          >
+            Studio
+          </Link>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="px-1 text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-50"
+            >
+              Sign out
+            </button>
+          </form>
         </div>
       </div>
     </header>

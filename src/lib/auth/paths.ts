@@ -51,7 +51,7 @@ export function destinationAfterSignIn(input: {
 
   if (next?.startsWith("/gallery/") || next === "/gallery") return next;
   if (input.albumId) return `/gallery/${input.albumId}`;
-  return "/";
+  return "/gallery";
 }
 
 export function loginErrorMessage(code: string | null): string | null {

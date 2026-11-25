@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { resolveSignInDestination } from "@/lib/auth/destination";
 import { publicEnv } from "@/lib/env";
 import type { Database } from "@/types/database";
 
@@ -68,6 +69,19 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // A signed-in visitor should not see the login form. Activity keeps that
+  // page mounted after a successful sign-in, and returning to it otherwise
+  // restores the stuck "Signing in…" button.
+  if (pathname === "/login" && userId) {
+    const destination = await resolveSignInDestination(
+      supabase,
+      request.nextUrl.searchParams.get("next"),
+    );
+    if (destination !== "/login") {
+      return redirectTo(request, supabaseResponse, destination);
+    }
+  }
+
   return supabaseResponse;
 }
 
@@ -76,13 +90,26 @@ function redirectToLogin(
   sessionResponse: NextResponse,
   errorCode?: "forbidden",
 ) {
-  const url = request.nextUrl.clone();
   const next = `${request.nextUrl.pathname}${request.nextUrl.search}`;
-  url.pathname = "/login";
+  return redirectTo(request, sessionResponse, "/login", {
+    next,
+    ...(errorCode ? { error: errorCode } : {}),
+  });
+}
+
+function redirectTo(
+  request: NextRequest,
+  sessionResponse: NextResponse,
+  pathname: string,
+  searchParams?: Record<string, string>,
+) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
   url.search = "";
-  url.searchParams.set("next", next);
-  if (errorCode) {
-    url.searchParams.set("error", errorCode);
+  if (searchParams) {
+    for (const [key, value] of Object.entries(searchParams)) {
+      url.searchParams.set(key, value);
+    }
   }
 
   const redirectResponse = NextResponse.redirect(url);

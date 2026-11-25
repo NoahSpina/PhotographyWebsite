@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ProofingGallery } from "@/components/gallery/proofing-gallery";
 import { getAlbumEntitlement, getUpgradeOptions } from "@/lib/entitlements";
+import { getSiteViewer } from "@/lib/auth/viewer";
 import { getGalleryAccess } from "@/lib/gallery/access";
 import { loadGalleryPhotos, loadGallerySelections } from "@/lib/gallery/data";
 
@@ -38,6 +39,7 @@ async function Gallery({ params }: GalleryPageProps) {
   }
 
   const { supabase, album, isAdmin } = access;
+  const viewer = await getSiteViewer();
   const clientId = album.client_id;
 
   const [photos, selections, entitlement] = await Promise.all([
@@ -49,6 +51,7 @@ async function Gallery({ params }: GalleryPageProps) {
 
   return (
     <ProofingGallery
+      signedInName={viewer?.name ?? null}
       album={{
         id: album.id,
         title: album.title,

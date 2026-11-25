@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { resolveSignInDestination } from "@/lib/auth/destination";
 import { loginErrorMessage, safeInternalPath } from "@/lib/auth/paths";
+import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
@@ -34,6 +37,14 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
 async function LoginContent({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const next = safeInternalPath(firstParam(params.next));
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+
+  if (data?.claims.sub) {
+    const destination = await resolveSignInDestination(supabase, next);
+    redirect(destination === "/login" ? "/gallery" : destination);
+  }
+
   const initialError = loginErrorMessage(firstParam(params.error));
 
   return <LoginForm next={next} initialError={initialError} />;

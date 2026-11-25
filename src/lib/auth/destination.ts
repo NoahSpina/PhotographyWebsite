@@ -1,11 +1,11 @@
-import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { destinationAfterSignIn } from "@/lib/auth/paths";
-import type { ServerSupabaseClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database";
 import type { Role } from "@/types";
 
 /** Where to send the user whose session was just established. */
 export async function resolveSignInDestination(
-  supabase: ServerSupabaseClient,
+  supabase: SupabaseClient<Database>,
   next: string | null,
 ): Promise<string> {
   const { data } = await supabase.auth.getClaims();

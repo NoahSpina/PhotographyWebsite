@@ -16,6 +16,7 @@ import type {
 import type { AlbumStatus } from "@/types";
 
 type ProofingGalleryProps = {
+  signedInName: string | null;
   album: { id: string; title: string; shootDateLabel: string | null };
   photos: GalleryPhoto[];
   initialSelections: GallerySelection[];
@@ -30,6 +31,7 @@ type SelectionMap = ReadonlyMap<string, string | null>;
 type Notice = { tone: "info" | "error"; message: string };
 
 export function ProofingGallery({
+  signedInName,
   album,
   photos,
   initialSelections,
@@ -149,6 +151,7 @@ export function ProofingGallery({
   return (
     <div className="flex flex-1 flex-col">
       <GalleryTopBar
+        signedInName={signedInName}
         title={album.title}
         shootDateLabel={album.shootDateLabel}
         photoCount={photos.length}

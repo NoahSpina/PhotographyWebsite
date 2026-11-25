@@ -45,3 +45,5 @@ aws/lambda/watermark/dist/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+notes.txt

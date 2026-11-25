@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { buttonClass } from "@/components/ui/button-styles";
@@ -25,11 +25,34 @@ export function LoginForm({ next, initialError }: LoginFormProps) {
   const [error, setError] = useState<string | null>(initialError);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState<"password" | "magic" | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
+  const signingIn = useRef(false);
+
+  // The login route stays mounted after navigation. Clear the in-progress
+  // label when it hides, and leave again if a session is already present.
+  useLayoutEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      if (signingIn.current) return;
+      const destination = await resolveDestination(next);
+      if (cancelled || signingIn.current || destination === "/login") return;
+      setRedirecting(true);
+      router.replace(destination);
+      router.refresh();
+    })();
+
+    return () => {
+      cancelled = true;
+      setPending(null);
+    };
+  }, [next, router]);
 
   async function handlePasswordSignIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setNotice(null);
+    signingIn.current = true;
     setPending("password");
 
     const supabase = createClient();
@@ -39,13 +62,14 @@ export function LoginForm({ next, initialError }: LoginFormProps) {
     });
 
     if (signInError) {
+      signingIn.current = false;
       setPending(null);
       setError(signInError.message);
       return;
     }
 
     const destination = await resolveDestination(next);
-    router.push(destination);
+    router.replace(destination === "/login" ? "/gallery" : destination);
     router.refresh();
   }
 
@@ -116,7 +140,16 @@ export function LoginForm({ next, initialError }: LoginFormProps) {
           Studio accounts use a password. Clients can use a password or a one-time email link.
         </p>
 
-        <form onSubmit={handlePasswordSignIn} className="mt-10 max-w-md space-y-6">
+        {redirecting ? (
+          <p role="status" className="mt-10 text-sm text-stone">
+            You&apos;re signed in. Continuing…
+          </p>
+        ) : null}
+
+        <form
+          onSubmit={handlePasswordSignIn}
+          className={`mt-10 max-w-md space-y-6 ${redirecting ? "hidden" : ""}`}
+        >
           <label className="block">
             <span className="eyebrow text-stone">Email</span>
             <input

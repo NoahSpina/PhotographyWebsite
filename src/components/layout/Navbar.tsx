@@ -22,7 +22,13 @@ function subscribeToScroll(onChange: () => void) {
 const isScrolled = () => window.scrollY > SCROLLED_AFTER_PX;
 const isScrolledOnServer = () => false;
 
-export function Navbar() {
+export function Navbar({
+  account,
+  menuAccount,
+}: {
+  account: React.ReactNode;
+  menuAccount: React.ReactNode;
+}) {
   const scrolled = useSyncExternalStore(subscribeToScroll, isScrolled, isScrolledOnServer);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -50,12 +56,7 @@ export function Navbar() {
         </Suspense>
 
         <div className="flex items-center gap-3 justify-self-end sm:gap-7">
-          <Link
-            href="/login"
-            className="nav-tone-muted eyebrow hidden cursor-pointer md:inline"
-          >
-            Client Login
-          </Link>
+          {account}
           <Link href="/book" className={buttonClass({ size: "sm", className: "nav-cta" })}>
             <span className="sm:hidden">Book</span>
             <span className="hidden sm:inline">Book a Session</span>
@@ -74,7 +75,9 @@ export function Navbar() {
       </nav>
 
       <AnimatePresence>
-        {menuOpen ? <MobileMenu key="mobile-menu" onClose={() => setMenuOpen(false)} /> : null}
+        {menuOpen ? (
+          <MobileMenu key="mobile-menu" account={menuAccount} onClose={() => setMenuOpen(false)} />
+        ) : null}
       </AnimatePresence>
     </header>
   );
@@ -120,7 +123,13 @@ function isActivePath(href: string, pathname: string | null): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function MobileMenu({ onClose }: { onClose: () => void }) {
+function MobileMenu({
+  account,
+  onClose,
+}: {
+  account: React.ReactNode;
+  onClose: () => void;
+}) {
   const { dialogRef, dialogProps } = useMotionDialog(onClose);
   const { contact, location } = siteConfig;
 
@@ -180,15 +189,16 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, ease: EASE_LUXE, delay: 0.4 }}
           >
+            <div
+              onClick={(event) => {
+                const target = event.target;
+                if (target instanceof Element && target.closest("a")) onClose();
+              }}
+            >
+              {account}
+            </div>
             <Link href="/book" onClick={onClose} className={buttonClass({ size: "lg", className: "w-full" })}>
               Book a Session
-            </Link>
-            <Link
-              href="/login"
-              onClick={onClose}
-              className={buttonClass({ variant: "outline", size: "lg", className: "w-full" })}
-            >
-              Client Login
             </Link>
             <p className="pt-5 text-sm text-stone">
               {location.short} ·{" "}
