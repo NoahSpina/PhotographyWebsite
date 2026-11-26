@@ -6,7 +6,7 @@ export function StudioIntro() {
   const { intro, location, name, philosophy } = siteConfig;
 
   return (
-    <section id="about" className="bg-alabaster py-24 sm:py-32 lg:py-40">
+    <section id="about" className="bg-alabaster pb-20 pt-20 sm:pb-28 sm:pt-24 lg:pb-32 lg:pt-28">
       <div className="container-page grid items-center gap-16 lg:grid-cols-12 lg:gap-8">
         <Reveal className="lg:col-span-6">
           <p className="eyebrow text-stone">{location.eyebrow}</p>

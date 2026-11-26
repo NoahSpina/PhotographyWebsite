@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ProofingGallery } from "@/components/gallery/proofing-gallery";
+import { resolveAdminPreviewReturn } from "@/lib/admin/preview-return";
 import { getAlbumEntitlement, getUpgradeOptions } from "@/lib/entitlements";
 import { getSiteViewer } from "@/lib/auth/viewer";
 import { getGalleryAccess } from "@/lib/gallery/access";
@@ -14,18 +15,19 @@ export const metadata: Metadata = {
 
 type GalleryPageProps = {
   params: Promise<{ albumId: string }>;
+  searchParams: Promise<{ from?: string }>;
 };
 
-export default function GalleryPage({ params }: GalleryPageProps) {
+export default function GalleryPage({ params, searchParams }: GalleryPageProps) {
   return (
     <Suspense fallback={<GalleryFallback />}>
-      <Gallery params={params} />
+      <Gallery params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function Gallery({ params }: GalleryPageProps) {
-  const { albumId } = await params;
+async function Gallery({ params, searchParams }: GalleryPageProps) {
+  const [{ albumId }, query] = await Promise.all([params, searchParams]);
   const access = await getGalleryAccess(albumId);
 
   if (!access.ok) {
@@ -68,7 +70,15 @@ async function Gallery({ params }: GalleryPageProps) {
           : null
       }
       upgradeOptions={upgradeOptions}
-      adminPreview={isAdmin ? { clientEmail: album.client_email, status: album.status } : null}
+      adminPreview={
+        isAdmin
+          ? {
+              clientEmail: album.client_email,
+              status: album.status,
+              ...resolveAdminPreviewReturn(query.from, album.id),
+            }
+          : null
+      }
     />
   );
 }

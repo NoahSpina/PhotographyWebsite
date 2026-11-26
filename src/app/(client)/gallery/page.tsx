@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { signOut } from "@/lib/auth/sign-out";
@@ -23,6 +24,8 @@ export default function GalleryIndexPage() {
 }
 
 async function GalleryIndex() {
+  // Supabase checks token expiry with Date.now(), which must not run during prerender.
+  await connection();
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims.sub;
@@ -54,7 +57,13 @@ async function GalleryIndex() {
           <Wordmark />
           <div className="flex items-center gap-5">
             <p className="text-sm text-stone">Hello, {name}</p>
-            <form action={signOut}>
+            <Link
+              href="/"
+              className="group cursor-pointer py-2 text-sm text-stone transition-colors duration-500 hover:text-ink"
+            >
+              <span className="underline-draw">Back to Studio</span>
+            </Link>
+            <form action={signOut} className="flex">
               <button type="submit" className={buttonClass({ variant: "outline", size: "sm" })}>
                 Sign out
               </button>
@@ -77,10 +86,12 @@ async function GalleryIndex() {
               <li key={album.id}>
                 <Link
                   href={`/gallery/${album.id}`}
-                  className="flex cursor-pointer flex-wrap items-baseline justify-between gap-3 py-6"
+                  className="group flex cursor-pointer flex-wrap items-baseline justify-between gap-3 py-6"
                 >
-                  <span className="font-serif text-3xl font-light">{album.title}</span>
-                  <span className="eyebrow text-stone">
+                  <span className="font-serif text-3xl font-light">
+                    <span className="underline-draw">{album.title}</span>
+                  </span>
+                  <span className="eyebrow text-stone transition-colors duration-500 group-hover:text-ink">
                     {album.shoot_date ? formatLongDate(album.shoot_date) : "Open gallery"}
                   </span>
                 </Link>

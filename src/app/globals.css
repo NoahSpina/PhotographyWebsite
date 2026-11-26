@@ -67,20 +67,6 @@
   }
 }
 
-/* Reads --marquee-duration on the element itself, so it can't live in @theme. */
-@utility animate-marquee {
-  animation: marquee var(--marquee-duration, 120s) linear infinite;
-}
-
-@keyframes marquee {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-
 @utility container-page {
   margin-inline: auto;
   width: 100%;
@@ -247,8 +233,13 @@ body:has([data-hero-overlay]:not([style*="display: none"]):not([style*="display:
   color: var(--color-alabaster);
 }
 
-.marquee-track:hover,
-.marquee-track:focus-within,
-.marquee-track[data-paused="true"] {
-  animation-play-state: paused;
+/* Signed in, the full CTA label doesn't fit beside the centered links until xl. */
+@media (width >= 64rem) and (width < 80rem) {
+  [data-nav]:has([data-nav-account]) .nav-cta-long {
+    display: none;
+  }
+
+  [data-nav]:has([data-nav-account]) .nav-cta-short {
+    display: inline;
+  }
 }

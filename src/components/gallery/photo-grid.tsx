@@ -1,10 +1,10 @@
 import { HeartIcon } from "@/components/gallery/heart-icon";
 import { ProtectedImage } from "@/components/gallery/protected-image";
-import type { GalleryPhoto } from "@/lib/gallery/types";
+import type { GalleryPhoto, GallerySelection } from "@/lib/gallery/types";
 
 type PhotoGridProps = {
   photos: GalleryPhoto[];
-  selections: ReadonlyMap<string, string | null>;
+  selections: ReadonlyMap<string, GallerySelection>;
   pendingIds: ReadonlySet<string>;
   canSelect: boolean;
   onOpen: (photoId: string) => void;
@@ -35,8 +35,15 @@ export function PhotoGrid({
     <ul className="flex flex-wrap gap-2 [--row-height:8.5rem] after:grow-[999] after:content-[''] sm:[--row-height:11rem] lg:[--row-height:14rem]">
       {photos.map((photo, index) => {
         const ratio = aspectRatio(photo);
-        const selected = selections.has(photo.id);
-        const hasNote = Boolean(selections.get(photo.id));
+        const selection = selections.get(photo.id);
+        const selected = Boolean(selection);
+        const hasNote = Boolean(selection?.notes);
+        const retouchBadge =
+          selection?.retouchStatus === "in_progress"
+            ? "Retouching"
+            : selection?.retouchStatus === "completed"
+              ? "Retouched"
+              : null;
         const label = `photo ${index + 1}`;
 
         return (
@@ -77,7 +84,11 @@ export function PhotoGrid({
               <HeartIcon filled={selected} className="size-5" />
             </button>
 
-            {hasNote ? (
+            {retouchBadge ? (
+              <span className="pointer-events-none absolute bottom-2 left-2 rounded-full bg-black/65 px-2 py-0.5 text-xs text-white">
+                {retouchBadge}
+              </span>
+            ) : hasNote ? (
               <span className="pointer-events-none absolute bottom-2 left-2 rounded-full bg-black/65 px-2 py-0.5 text-xs text-white">
                 Note
               </span>

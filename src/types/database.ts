@@ -9,6 +9,7 @@ export type Json =
 export type UserRole = "admin" | "client";
 export type AlbumStatus = "draft" | "published" | "archived";
 export type PhotoStatus = "uploading" | "processing" | "ready" | "failed";
+export type RetouchStatus = "pending" | "in_progress" | "completed" | "declined";
 export type OrderType = "booking" | "gallery_upgrade" | "extra_photos";
 export type OrderStatus = "pending" | "paid" | "refunded";
 
@@ -154,6 +155,9 @@ export type Database = {
           height: number | null;
           sort_order: number;
           exif: Json;
+          file_size_bytes: number | null;
+          version: number;
+          superseded_s3_keys: string[] | null;
           created_at: string;
           updated_at: string;
         },
@@ -168,6 +172,9 @@ export type Database = {
           height?: number | null;
           sort_order?: number;
           exif?: Json;
+          file_size_bytes?: number | null;
+          version?: number;
+          superseded_s3_keys?: string[] | null;
           created_at?: string;
           updated_at?: string;
         },
@@ -182,6 +189,9 @@ export type Database = {
           height?: number | null;
           sort_order?: number;
           exif?: Json;
+          file_size_bytes?: number | null;
+          version?: number;
+          superseded_s3_keys?: string[] | null;
           created_at?: string;
           updated_at?: string;
         }
@@ -193,6 +203,9 @@ export type Database = {
           photo_id: string;
           client_id: string;
           notes: string | null;
+          retouch_status: RetouchStatus;
+          admin_reply: string | null;
+          admin_replied_at: string | null;
           created_at: string;
         },
         {
@@ -201,6 +214,9 @@ export type Database = {
           photo_id: string;
           client_id: string;
           notes?: string | null;
+          retouch_status?: RetouchStatus;
+          admin_reply?: string | null;
+          admin_replied_at?: string | null;
           created_at?: string;
         },
         {
@@ -209,6 +225,9 @@ export type Database = {
           photo_id?: string;
           client_id?: string;
           notes?: string | null;
+          retouch_status?: RetouchStatus;
+          admin_reply?: string | null;
+          admin_replied_at?: string | null;
           created_at?: string;
         }
       >;

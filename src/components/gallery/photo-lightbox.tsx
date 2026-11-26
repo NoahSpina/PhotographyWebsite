@@ -2,12 +2,18 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { HeartIcon } from "@/components/gallery/heart-icon";
 import { ProtectedImage } from "@/components/gallery/protected-image";
 import { useModalDialog } from "@/components/gallery/use-modal-dialog";
-import { NOTE_MAX_LENGTH, normalizeNote, type GalleryPhoto } from "@/lib/gallery/types";
+import { Timestamp } from "@/components/admin/timestamp";
+import {
+  NOTE_MAX_LENGTH,
+  normalizeNote,
+  type GalleryPhoto,
+  type GallerySelection,
+} from "@/lib/gallery/types";
 
 type PhotoLightboxProps = {
   photos: GalleryPhoto[];
   index: number;
-  selections: ReadonlyMap<string, string | null>;
+  selections: ReadonlyMap<string, GallerySelection>;
   pendingIds: ReadonlySet<string>;
   canSelect: boolean;
   counterLabel: string | null;
@@ -61,7 +67,8 @@ export function PhotoLightbox({
 
   if (!photo) return null;
 
-  const selected = selections.has(photo.id);
+  const selection = selections.get(photo.id);
+  const selected = Boolean(selection);
   const pending = pendingIds.has(photo.id);
 
   return (
@@ -134,12 +141,30 @@ export function PhotoLightbox({
             </p>
           ) : null}
           {!canSelect ? null : selected ? (
-            <NoteEditor
-              key={photo.id}
-              photoId={photo.id}
-              savedNote={selections.get(photo.id) ?? null}
-              onSave={onSaveNote}
-            />
+            <>
+              <NoteEditor
+                key={photo.id}
+                photoId={photo.id}
+                savedNote={selection?.notes ?? null}
+                onSave={onSaveNote}
+              />
+              {selection?.adminReply ? (
+                <div className="mt-4 rounded-md border border-neutral-700 bg-neutral-900/80 px-4 py-3 text-sm">
+                  <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+                    Note from studio
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap break-words leading-relaxed text-neutral-100">
+                    {selection.adminReply}
+                  </p>
+                  {selection.adminRepliedAt ? (
+                    <Timestamp
+                      iso={selection.adminRepliedAt}
+                      className="mt-2 block text-xs text-neutral-500"
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+            </>
           ) : (
             <p className="text-sm text-neutral-500">
               Select this photo to leave a retouching note.

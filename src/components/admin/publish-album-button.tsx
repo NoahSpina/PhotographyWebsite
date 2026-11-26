@@ -72,7 +72,7 @@ export function PublishAlbumButton({ albumId, status, clientEmail }: PublishAlbu
             value={primaryDelivery}
             disabled={disabled}
             onClick={() => setSubmitted(primaryDelivery)}
-            className="rounded-md bg-emerald-700 px-4 py-2 text-sm text-white disabled:opacity-60"
+            className="rounded-md bg-emerald-700 px-4 py-2 text-sm text-white transition-colors enabled:hover:bg-emerald-800 disabled:opacity-60"
           >
             {pending && submitted === primaryDelivery
               ? "Working…"
@@ -87,7 +87,7 @@ export function PublishAlbumButton({ albumId, status, clientEmail }: PublishAlbu
               value="link"
               disabled={disabled}
               onClick={() => setSubmitted("link")}
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm disabled:opacity-60 dark:border-neutral-700"
+              className="rounded-md border border-neutral-300 px-4 py-2 text-sm transition-colors enabled:hover:border-neutral-500 enabled:hover:bg-neutral-100 disabled:opacity-60 dark:border-neutral-700 dark:enabled:hover:bg-neutral-900"
             >
               {pending && submitted === "link" ? "Working…" : linkLabel}
             </button>
@@ -138,7 +138,7 @@ export function PublishAlbumButton({ albumId, status, clientEmail }: PublishAlbu
             <button
               type="button"
               onClick={copyLink}
-              className="rounded-md border border-neutral-300 px-3 py-1 text-xs dark:border-neutral-700"
+              className="rounded-md border border-neutral-300 px-3 py-1 text-xs transition-colors hover:border-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
             >
               {copied ? "Copied" : "Copy"}
             </button>

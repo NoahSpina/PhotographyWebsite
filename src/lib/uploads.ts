@@ -13,7 +13,7 @@ export const IMAGE_EXTENSIONS: Record<AllowedImageType, string> = {
   "image/webp": "webp",
 };
 
-export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
+export const MAX_UPLOAD_BYTES = 30 * 1024 * 1024;
 
 export const UPLOAD_URL_TTL_SECONDS = 5 * 60;
 
@@ -33,7 +33,6 @@ export type PresignUploadRequest = {
 export type PresignUploadResponse = {
   photoId: string;
   uploadUrl: string;
-  masterKey: string;
 };
 
 export function formatBytes(bytes: number): string {

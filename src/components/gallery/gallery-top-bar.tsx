@@ -84,16 +84,16 @@ export function GalleryTopBar({
 
           <Link
             href="/"
-            className="cursor-pointer px-1 text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-50"
+            className="group cursor-pointer px-1 py-1.5 text-sm text-neutral-500 transition-colors duration-500 hover:text-neutral-950 dark:hover:text-neutral-50"
           >
-            Studio
+            <span className="underline-draw">Studio</span>
           </Link>
-          <form action={signOut}>
+          <form action={signOut} className="flex">
             <button
               type="submit"
-              className="px-1 text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-50"
+              className="group px-1 py-1.5 text-sm text-neutral-500 transition-colors duration-500 hover:text-neutral-950 dark:hover:text-neutral-50"
             >
-              Sign out
+              <span className="underline-draw">Sign out</span>
             </button>
           </form>
         </div>

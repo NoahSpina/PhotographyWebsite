@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { buttonClass } from "@/components/ui/button-styles";
 import { signOut } from "./actions";
@@ -6,6 +7,8 @@ import { AdminNav } from "./admin-nav";
 import { createClient } from "@/lib/supabase/server";
 
 export async function AdminFrame({ children }: { children: React.ReactNode }) {
+  // Supabase checks token expiry with Date.now(), which must not run during prerender.
+  await connection();
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims.sub;

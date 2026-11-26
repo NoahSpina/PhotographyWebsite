@@ -8,7 +8,7 @@ export function JournalSection() {
   if (!lead) return null;
 
   return (
-    <section className="bg-linen py-24 lg:py-32">
+    <section className="bg-linen pb-24 pt-18 lg:pb-32 lg:pt-24">
       <div className="container-page">
         <Reveal>
           <div className="flex flex-wrap items-end justify-between gap-6">

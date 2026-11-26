@@ -208,7 +208,11 @@ export function PhotoUploader({ albumId, onPhotoCreated, onUploadSettled }: Phot
               {items.length - finishedCount} in progress, {finishedCount} finished
             </span>
             {finishedCount > 0 ? (
-              <button type="button" onClick={clearFinished} className="underline">
+              <button
+                type="button"
+                onClick={clearFinished}
+                className="underline transition-colors hover:text-neutral-900 dark:hover:text-neutral-100"
+              >
                 Clear finished
               </button>
             ) : null}
@@ -260,7 +264,12 @@ function UploadRow({ item, onRetry }: { item: UploadItem; onRetry: () => void })
         <div className="flex items-center justify-between gap-4 text-xs">
           <span className="text-red-700 dark:text-red-400">{item.error}</span>
           {item.retryable ? (
-            <button type="button" onClick={onRetry} className="shrink-0 underline">
+            <button
+              type="button"
+              onClick={onRetry}
+              aria-label={`Retry uploading ${item.file.name}`}
+              className="shrink-0 underline transition-colors hover:text-neutral-900 dark:hover:text-neutral-100"
+            >
               Retry
             </button>
           ) : null}
@@ -324,13 +333,12 @@ async function requestUploadUrl(albumId: string, file: File): Promise<PresignUpl
     typeof body !== "object" ||
     body === null ||
     !("photoId" in body && typeof body.photoId === "string") ||
-    !("uploadUrl" in body && typeof body.uploadUrl === "string") ||
-    !("masterKey" in body && typeof body.masterKey === "string")
+    !("uploadUrl" in body && typeof body.uploadUrl === "string")
   ) {
     throw new Error("The server returned an unexpected response.");
   }
 
-  return { photoId: body.photoId, uploadUrl: body.uploadUrl, masterKey: body.masterKey };
+  return { photoId: body.photoId, uploadUrl: body.uploadUrl };
 }
 
 /** fetch() has no upload progress events, so this uses XMLHttpRequest. */

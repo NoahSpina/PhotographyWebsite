@@ -1,3 +1,5 @@
+import type { RetouchStatus } from "@/types";
+
 /**
  * Shapes shared by the proofing gallery's Server Components, Server Actions,
  * and Client Components. Nothing here is secret. Photos carry CloudFront
@@ -18,6 +20,9 @@ export type GalleryPhoto = {
 export type GallerySelection = {
   photoId: string;
   notes: string | null;
+  retouchStatus: RetouchStatus;
+  adminReply: string | null;
+  adminRepliedAt: string | null;
 };
 
 export type GalleryQuota = {

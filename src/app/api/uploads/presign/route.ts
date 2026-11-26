@@ -77,6 +77,7 @@ export async function POST(request: Request) {
     album_id: albumId,
     master_s3_key: masterKey,
     status: "uploading",
+    file_size_bytes: fileSize,
   });
 
   if (insertError) {
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
     return errorResponse("Could not register the photo.", 500);
   }
 
-  const payload: PresignUploadResponse = { photoId, uploadUrl, masterKey };
+  const payload: PresignUploadResponse = { photoId, uploadUrl };
   return NextResponse.json(payload, { status: 201, headers: NO_STORE });
 }
 
@@ -108,7 +109,7 @@ function parsePresignRequest(body: unknown): PresignUploadRequest | string {
     return "fileSize must be a positive integer.";
   }
   if (fileSize > MAX_UPLOAD_BYTES) {
-    return `Files must be ${formatBytes(MAX_UPLOAD_BYTES)} or smaller.`;
+    return `Files must be ${formatBytes(MAX_UPLOAD_BYTES)} or smaller. Export a print-ready JPEG instead of a RAW or TIFF.`;
   }
 
   return { albumId, fileName: fileName.trim(), contentType, fileSize };

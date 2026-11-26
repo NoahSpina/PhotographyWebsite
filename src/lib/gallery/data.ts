@@ -52,7 +52,7 @@ export async function loadGallerySelections(
 ): Promise<GallerySelection[]> {
   const { data, error } = await supabase
     .from("selections")
-    .select("photo_id, notes")
+    .select("photo_id, notes, retouch_status, admin_reply, admin_replied_at")
     .eq("album_id", albumId)
     .eq("client_id", clientId);
 
@@ -60,5 +60,11 @@ export async function loadGallerySelections(
     console.error("Could not load selections:", error.message);
     throw new Error("Your selections could not be loaded.");
   }
-  return data.map((row) => ({ photoId: row.photo_id, notes: row.notes }));
+  return data.map((row) => ({
+    photoId: row.photo_id,
+    notes: row.notes,
+    retouchStatus: row.retouch_status,
+    adminReply: row.admin_reply,
+    adminRepliedAt: row.admin_replied_at,
+  }));
 }

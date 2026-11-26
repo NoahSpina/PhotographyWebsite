@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOut } from "@/lib/auth/sign-out";
 import { getSiteViewer, type SiteViewer } from "@/lib/auth/viewer";
+import { NavMark, navLinkClass } from "@/components/layout/nav-link";
 import { buttonClass } from "@/components/ui/button-styles";
 
 function destination(viewer: SiteViewer): { href: string; label: string } {
@@ -14,16 +15,24 @@ export async function NavAccount() {
 
   const next = destination(viewer);
   return (
-    <div className="hidden items-center gap-5 md:flex">
-      <p className="nav-tone-muted eyebrow max-w-48 truncate">
-        Hello, <span className="nav-tone">{viewer.name}</span>
+    <div data-nav-account className="hidden items-center gap-5 md:flex lg:gap-7 xl:gap-10">
+      {/* Shown only at widths with room for it beside the other nav items. */}
+      <p className="nav-tone-muted eyebrow hidden truncate min-[56rem]:block lg:hidden min-[90rem]:block">
+        Hello, <span className="nav-tone">{firstName(viewer.name)}</span>
       </p>
-      <Link href={next.href} className="nav-tone-muted eyebrow cursor-pointer">
+      <Link href={next.href} className={`${navLinkClass} nav-tone-muted`}>
         {next.label}
+        <NavMark />
       </Link>
-      <SignOutButton className="nav-tone-muted eyebrow" />
+      <SignOutButton className={`${navLinkClass} nav-tone-muted`}>
+        <NavMark />
+      </SignOutButton>
     </div>
   );
+}
+
+function firstName(name: string): string {
+  return name.split(/\s+/)[0] || name;
 }
 
 export function NavAccountFallback() {
@@ -78,17 +87,19 @@ export function FooterAccountFallback() {
 
 function LoginLink() {
   return (
-    <Link href="/login" className="nav-tone-muted eyebrow hidden cursor-pointer md:inline">
+    <Link href="/login" className={`${navLinkClass} nav-tone-muted hidden md:block`}>
       Client Login
+      <NavMark />
     </Link>
   );
 }
 
-function SignOutButton({ className }: { className: string }) {
+function SignOutButton({ className, children }: { className: string; children?: React.ReactNode }) {
   return (
-    <form action={signOut}>
+    <form action={signOut} className="flex">
       <button type="submit" className={className}>
         Sign out
+        {children}
       </button>
     </form>
   );

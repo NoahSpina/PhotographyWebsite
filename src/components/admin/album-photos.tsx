@@ -1,10 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PhotoStatusBadge } from "@/components/admin/status-badge";
 import { PhotoUploader } from "@/components/admin/photo-uploader";
+import { SelectionPhotoControls } from "@/components/admin/selection-photo-controls";
+import { buttonClass } from "@/components/ui/button-styles";
 import { ALBUM_PHOTO_COLUMNS, type AlbumPhoto } from "@/lib/admin/photos";
+import type { ReviewPhoto } from "@/lib/admin/review";
 import { proofUrl } from "@/lib/aws/cloudfront";
 import { createClient } from "@/lib/supabase/client";
 
@@ -13,14 +16,18 @@ const POLL_INTERVAL_MS = 3000;
 type AlbumPhotosProps = {
   albumId: string;
   initialPhotos: AlbumPhoto[];
+  selectedPhotoIds: string[];
 };
 
-export function AlbumPhotos({ albumId, initialPhotos }: AlbumPhotosProps) {
+export function AlbumPhotos({ albumId, initialPhotos, selectedPhotoIds }: AlbumPhotosProps) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [pollError, setPollError] = useState<string | null>(null);
-  // Photos uploaded from this tab. Older rows stuck in `uploading` were
-  // abandoned mid-upload and should not keep the poll running forever.
   const [trackedIds, setTrackedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [checkedIds, setCheckedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+
+  const selectedSet = useMemo(() => new Set(selectedPhotoIds), [selectedPhotoIds]);
 
   const shouldPoll = photos.some(
     (photo) =>
@@ -68,6 +75,7 @@ export function AlbumPhotos({ albumId, initialPhotos }: AlbumPhotosProps) {
               id: photoId,
               status: "uploading",
               thumb_s3_key: null,
+              proof_s3_key: null,
               width: null,
               height: null,
               created_at: new Date().toISOString(),
@@ -89,6 +97,84 @@ export function AlbumPhotos({ albumId, initialPhotos }: AlbumPhotosProps) {
     }
   }
 
+  function patchPhoto(photoId: string, patch: Partial<ReviewPhoto>) {
+    if (patch.status) {
+      setPhotos((current) =>
+        current.map((photo) =>
+          photo.id === photoId ? { ...photo, status: patch.status! } : photo,
+        ),
+      );
+      if (patch.status === "uploading") {
+        setTrackedIds((current) => new Set(current).add(photoId));
+      }
+    }
+    if (
+      patch.status === "ready" ||
+      patch.status === "failed" ||
+      patch.thumbUrl !== undefined ||
+      patch.proofUrl !== undefined
+    ) {
+      void refreshPhotos();
+    }
+  }
+
+  async function refreshPhotos() {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("photos")
+      .select(ALBUM_PHOTO_COLUMNS)
+      .eq("album_id", albumId)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+    if (data) setPhotos(data);
+  }
+
+  function removePhoto(photoId: string) {
+    setPhotos((current) => current.filter((photo) => photo.id !== photoId));
+    setCheckedIds((current) => {
+      const next = new Set(current);
+      next.delete(photoId);
+      return next;
+    });
+  }
+
+  async function deleteSelected() {
+    if (checkedIds.size === 0) return;
+    setBulkBusy(true);
+    setBulkError(null);
+    try {
+      const response = await fetch("/api/admin/photos/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoIds: [...checkedIds] }),
+      });
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message =
+          typeof body === "object" && body !== null && "error" in body && typeof body.error === "string"
+            ? body.error
+            : "Could not delete photos.";
+        throw new Error(message);
+      }
+      const deleted = new Set(checkedIds);
+      setPhotos((current) => current.filter((photo) => !deleted.has(photo.id)));
+      setCheckedIds(new Set());
+    } catch (error) {
+      setBulkError(error instanceof Error ? error.message : "Could not delete photos.");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  function toggleChecked(photoId: string) {
+    setCheckedIds((current) => {
+      const next = new Set(current);
+      if (next.has(photoId)) next.delete(photoId);
+      else next.add(photoId);
+      return next;
+    });
+  }
+
   const counts = {
     ready: photos.filter((photo) => photo.status === "ready").length,
     pending: photos.filter((photo) => photo.status === "uploading" || photo.status === "processing")
@@ -103,6 +189,32 @@ export function AlbumPhotos({ albumId, initialPhotos }: AlbumPhotosProps) {
         onPhotoCreated={handlePhotoCreated}
         onUploadSettled={handleUploadSettled}
       />
+
+      {checkedIds.size > 0 ? (
+        <div className="flex flex-wrap items-center gap-3 border border-hairline px-4 py-3">
+          <span className="text-sm tabular-nums">{checkedIds.size} selected</span>
+          <button
+            type="button"
+            onClick={() => void deleteSelected()}
+            disabled={bulkBusy}
+            className={buttonClass({
+              variant: "outline",
+              size: "sm",
+              className: "border-red-800/30 text-red-900 hover:border-red-900 hover:bg-red-900 hover:text-alabaster",
+            })}
+          >
+            {bulkBusy ? "Deleting…" : "Delete selected"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setCheckedIds(new Set())}
+            className={buttonClass({ variant: "outline", size: "sm" })}
+          >
+            Clear
+          </button>
+          {bulkError ? <span className="text-xs text-red-700">{bulkError}</span> : null}
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-neutral-600 dark:text-neutral-400">
         <span>{photos.length} photos</span>
@@ -119,7 +231,16 @@ export function AlbumPhotos({ albumId, initialPhotos }: AlbumPhotosProps) {
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
           {photos.map((photo) => (
-            <PhotoTile key={photo.id} photo={photo} tracked={trackedIds.has(photo.id)} />
+            <PhotoTile
+              key={photo.id}
+              photo={photo}
+              tracked={trackedIds.has(photo.id)}
+              checked={checkedIds.has(photo.id)}
+              clientSelected={selectedSet.has(photo.id)}
+              onToggleChecked={() => toggleChecked(photo.id)}
+              onPatch={(patch) => patchPhoto(photo.id, patch)}
+              onRemove={() => removePhoto(photo.id)}
+            />
           ))}
         </ul>
       )}
@@ -127,16 +248,58 @@ export function AlbumPhotos({ albumId, initialPhotos }: AlbumPhotosProps) {
   );
 }
 
-function PhotoTile({ photo, tracked }: { photo: AlbumPhoto; tracked: boolean }) {
+function PhotoTile({
+  photo,
+  tracked,
+  checked,
+  clientSelected,
+  onToggleChecked,
+  onPatch,
+  onRemove,
+}: {
+  photo: AlbumPhoto;
+  tracked: boolean;
+  checked: boolean;
+  clientSelected: boolean;
+  onToggleChecked: () => void;
+  onPatch: (patch: Partial<ReviewPhoto>) => void;
+  onRemove: () => void;
+}) {
   const thumbnail = photo.status === "ready" ? thumbnailUrl(photo.thumb_s3_key) : null;
   const label =
     photo.status === "uploading" && !tracked ? "Upload incomplete" : undefined;
 
+  const reviewPhoto: ReviewPhoto = {
+    id: photo.id,
+    filename: photo.id,
+    thumbUrl: thumbnail,
+    proofUrl: photo.proof_s3_key ? thumbnailUrl(photo.proof_s3_key) : null,
+    status: photo.status,
+    selected: clientSelected,
+    notes: null,
+    selectedAt: null,
+    clientLabel: null,
+    selectionId: null,
+    retouchStatus: null,
+    adminReply: null,
+    adminRepliedAt: null,
+  };
+
   return (
-    <li className="overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800">
+    <li className="min-w-0 overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800">
       <div className="relative aspect-square bg-neutral-100 dark:bg-neutral-900">
+        <label className="absolute top-2 left-2 z-10 flex cursor-pointer items-center gap-1 rounded bg-black/55 px-1.5 py-1 text-[10px] text-white">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={onToggleChecked}
+            className="size-3 accent-white"
+            aria-label={`Select photo ${photo.id} for bulk delete`}
+          />
+        </label>
         {thumbnail ? (
           <Image
+            key={thumbnail}
             src={thumbnail}
             alt=""
             fill
@@ -150,13 +313,21 @@ function PhotoTile({ photo, tracked }: { photo: AlbumPhoto; tracked: boolean }) 
           </div>
         )}
       </div>
-      <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-        <PhotoStatusBadge status={photo.status} label={label} />
-        {photo.width && photo.height ? (
-          <span className="text-xs text-neutral-500">
-            {photo.width}×{photo.height}
-          </span>
-        ) : null}
+      <div className="min-w-0 space-y-2 px-2 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <PhotoStatusBadge status={photo.status} label={label} />
+          {photo.width && photo.height ? (
+            <span className="text-xs text-neutral-500">
+              {photo.width}×{photo.height}
+            </span>
+          ) : null}
+        </div>
+        <SelectionPhotoControls
+          photo={reviewPhoto}
+          showRetouchFields={false}
+          onPhotoChange={onPatch}
+          onPhotoRemove={onRemove}
+        />
       </div>
     </li>
   );

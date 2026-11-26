@@ -92,7 +92,7 @@ export function UpsellModal({
                   onClick={() => setQuantity((value) => Math.max(1, value - 1))}
                   disabled={quantity <= 1}
                   aria-label="One fewer photo"
-                  className="px-3 py-1.5 disabled:opacity-40"
+                  className="px-3 py-1.5 enabled:hover:bg-neutral-100 disabled:opacity-40 dark:enabled:hover:bg-neutral-900"
                 >
                   −
                 </button>
@@ -104,7 +104,7 @@ export function UpsellModal({
                   onClick={() => setQuantity((value) => Math.min(maxExtraPhotos, value + 1))}
                   disabled={quantity >= maxExtraPhotos}
                   aria-label="One more photo"
-                  className="px-3 py-1.5 disabled:opacity-40"
+                  className="px-3 py-1.5 enabled:hover:bg-neutral-100 disabled:opacity-40 dark:enabled:hover:bg-neutral-900"
                 >
                   +
                 </button>

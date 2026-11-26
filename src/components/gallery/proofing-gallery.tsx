@@ -7,6 +7,7 @@ import { GalleryTopBar, type GalleryFilter } from "@/components/gallery/gallery-
 import { PhotoGrid } from "@/components/gallery/photo-grid";
 import { PhotoLightbox } from "@/components/gallery/photo-lightbox";
 import { UpsellModal, type UpsellTrigger } from "@/components/gallery/upsell-modal";
+import type { AdminPreviewReturn } from "@/lib/admin/preview-return";
 import type {
   GalleryPhoto,
   GalleryQuota,
@@ -23,10 +24,12 @@ type ProofingGalleryProps = {
   /** null when the album has no client to select for (admin preview only). */
   initialQuota: GalleryQuota | null;
   upgradeOptions: UpgradeOptions;
-  adminPreview: { clientEmail: string | null; status: AlbumStatus } | null;
+  adminPreview:
+    | ({ clientEmail: string | null; status: AlbumStatus } & AdminPreviewReturn)
+    | null;
 };
 
-type SelectionMap = ReadonlyMap<string, string | null>;
+type SelectionMap = ReadonlyMap<string, GallerySelection>;
 
 type Notice = { tone: "info" | "error"; message: string };
 
@@ -40,7 +43,7 @@ export function ProofingGallery({
   adminPreview,
 }: ProofingGalleryProps) {
   const [selections, setSelections] = useState<SelectionMap>(
-    () => new Map(initialSelections.map((selection) => [selection.photoId, selection.notes])),
+    () => new Map(initialSelections.map((selection) => [selection.photoId, selection])),
   );
   const [quota, setQuota] = useState(initialQuota);
   const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(() => new Set());
@@ -60,7 +63,8 @@ export function ProofingGallery({
     if (!quota || pendingIds.has(photoId)) return;
 
     const wasSelected = selections.has(photoId);
-    const previousNote = selections.get(photoId) ?? null;
+    const previous = selections.get(photoId) ?? null;
+    const previousNote = previous?.notes ?? null;
     const limit = quota.downloadLimit;
 
     if (!wasSelected && limit !== null && selections.size >= limit) {
@@ -69,17 +73,29 @@ export function ProofingGallery({
     }
 
     const rollback = () =>
-      setSelections((current) => withSelection(current, photoId, wasSelected, previousNote));
+      setSelections((current) =>
+        wasSelected && previous
+          ? new Map(current).set(photoId, previous)
+          : withSelection(current, photoId, wasSelected, previousNote, previous ?? undefined),
+      );
 
     setNotice(null);
-    setSelections((current) => withSelection(current, photoId, !wasSelected, previousNote));
+    setSelections((current) =>
+      withSelection(current, photoId, !wasSelected, previousNote, previous ?? undefined),
+    );
     setPendingIds((current) => new Set(current).add(photoId));
 
     toggleSelection({ albumId: album.id, photoId, selected: !wasSelected })
       .then((result) => {
         if (result.ok) {
           setSelections((current) =>
-            withSelection(current, photoId, result.selected, result.notes),
+            withSelection(
+              current,
+              photoId,
+              result.selected,
+              result.notes,
+              current.get(photoId),
+            ),
           );
           setQuota({
             downloadLimit: result.downloadLimit,
@@ -117,7 +133,9 @@ export function ProofingGallery({
       const result = await saveSelectionNote({ albumId: album.id, photoId, notes: note });
       if (!result.ok) return result.message;
       setSelections((current) =>
-        current.has(photoId) ? withSelection(current, photoId, true, result.notes) : current,
+        current.has(photoId)
+          ? withSelection(current, photoId, true, result.notes, current.get(photoId))
+          : current,
       );
       return null;
     } catch {
@@ -164,7 +182,7 @@ export function ProofingGallery({
       />
 
       {adminPreview ? (
-        <AdminPreviewBanner albumId={album.id} canSelect={canSelect} {...adminPreview} />
+        <AdminPreviewBanner canSelect={canSelect} adminPreview={adminPreview} />
       ) : null}
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
@@ -201,7 +219,7 @@ export function ProofingGallery({
               type="button"
               onClick={() => setNotice(null)}
               aria-label="Dismiss"
-              className="leading-none opacity-80 hover:opacity-100"
+              className="-m-1.5 flex size-8 shrink-0 items-center justify-center rounded-full text-lg leading-none opacity-80 transition-opacity hover:bg-white/15 hover:opacity-100"
             >
               ×
             </button>
@@ -243,29 +261,37 @@ function withSelection(
   photoId: string,
   selected: boolean,
   notes: string | null,
+  existing?: GallerySelection,
 ): SelectionMap {
   const next = new Map(current);
-  if (selected) next.set(photoId, notes);
-  else next.delete(photoId);
+  if (selected) {
+    next.set(photoId, {
+      photoId,
+      notes,
+      retouchStatus: existing?.retouchStatus ?? "pending",
+      adminReply: existing?.adminReply ?? null,
+      adminRepliedAt: existing?.adminRepliedAt ?? null,
+    });
+  } else {
+    next.delete(photoId);
+  }
   return next;
 }
 
 function AdminPreviewBanner({
-  albumId,
   canSelect,
-  clientEmail,
-  status,
+  adminPreview,
 }: {
-  albumId: string;
   canSelect: boolean;
-  clientEmail: string | null;
-  status: AlbumStatus;
+  adminPreview: { clientEmail: string | null; status: AlbumStatus } & AdminPreviewReturn;
 }) {
   const scope = canSelect
-    ? `Selections and notes you make here are saved for ${clientEmail ?? "the album's client"}.`
+    ? `Selections and notes you make here are saved for ${adminPreview.clientEmail ?? "the album's client"}.`
     : "This album has no client yet, so photos can't be selected.";
   const visibility =
-    status === "published" ? "" : " Clients can't open this gallery until it's published.";
+    adminPreview.status === "published"
+      ? ""
+      : " Clients can't open this gallery until it's published.";
 
   return (
     <div className="border-b border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
@@ -275,10 +301,10 @@ function AdminPreviewBanner({
           {visibility}
         </p>
         <Link
-          href={`/admin/albums/${albumId}`}
+          href={adminPreview.href}
           className="cursor-pointer font-medium underline underline-offset-2"
         >
-          Back to album settings
+          {adminPreview.label}
         </Link>
       </div>
     </div>

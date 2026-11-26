@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { AlbumAdminActions, AlbumAdminBackNav } from "@/components/admin/album-admin-nav";
 import { AlbumForm } from "@/components/admin/album-form";
 import { AlbumPhotos } from "@/components/admin/album-photos";
 import { PublishAlbumButton } from "@/components/admin/publish-album-button";
@@ -16,9 +16,6 @@ type AlbumPageProps = {
 export default function AdminAlbumPage({ params }: AlbumPageProps) {
   return (
     <main className="space-y-10">
-      <Link href="/admin/albums" className="cursor-pointer text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-50">
-        ← All albums
-      </Link>
       <Suspense fallback={<p className="text-sm text-neutral-500">Loading album…</p>}>
         <AlbumDetail params={params} />
       </Suspense>
@@ -31,7 +28,7 @@ async function AlbumDetail({ params }: AlbumPageProps) {
   if (!isUuid(albumId)) notFound();
 
   const supabase = await createClient();
-  const [albumResult, packagesResult, photosResult] = await Promise.all([
+  const [albumResult, packagesResult, photosResult, selectionsResult] = await Promise.all([
     supabase
       .from("albums")
       .select(
@@ -46,6 +43,7 @@ async function AlbumDetail({ params }: AlbumPageProps) {
       .eq("album_id", albumId)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),
+    supabase.from("selections").select("photo_id").eq("album_id", albumId),
   ]);
 
   if (albumResult.error) {
@@ -61,12 +59,31 @@ async function AlbumDetail({ params }: AlbumPageProps) {
   if (photosResult.error) {
     console.error("Could not load photos:", photosResult.error.message);
   }
+  if (selectionsResult.error) {
+    console.error("Could not load selections:", selectionsResult.error.message);
+  }
+
+  const selectedPhotoIds = [
+    ...new Set((selectionsResult.data ?? []).map((row) => row.photo_id)),
+  ];
+
+  const previewFrom = `/admin/albums/${album.id}`;
 
   return (
     <>
-      <header className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{album.title}</h1>
-        <AlbumStatusBadge status={album.status} />
+      <header className="space-y-6">
+        <AlbumAdminBackNav albumId={album.id} variant="settings" />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight">{album.title}</h1>
+            <AlbumStatusBadge status={album.status} />
+          </div>
+          <AlbumAdminActions
+            albumId={album.id}
+            previewFrom={previewFrom}
+            showSettingsLink={false}
+          />
+        </div>
       </header>
 
       <section className="grid gap-8 lg:grid-cols-[1fr_16rem]">
@@ -91,7 +108,12 @@ async function AlbumDetail({ params }: AlbumPageProps) {
             Photos could not be loaded.
           </p>
         ) : (
-          <AlbumPhotos key={album.id} albumId={album.id} initialPhotos={photosResult.data ?? []} />
+          <AlbumPhotos
+            key={album.id}
+            albumId={album.id}
+            initialPhotos={photosResult.data ?? []}
+            selectedPhotoIds={selectedPhotoIds}
+          />
         )}
       </section>
     </>

@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence } from "motion/react";
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
+import { useReelScroll } from "@/components/home/use-reel-scroll";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { buttonClass } from "@/components/ui/button-styles";
 import type { FeedFrame } from "@/lib/catalog/types";
@@ -19,20 +20,24 @@ export function HeroPhotoFeed({ frames }: HeroPhotoFeedProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
   const reel = buildReel(frames);
+  const { sectionRef, viewportRef, trackRef } = useReelScroll({
+    frameCount: reel.length,
+    paused: paused || openIndex !== null,
+  });
 
   return (
     <section
+      ref={sectionRef}
       id="portfolio"
       data-hero-overlay
       aria-label="Featured photographs"
-      className="relative z-0 -mt-16 h-svh overflow-hidden bg-charcoal lg:-mt-20"
+      className="relative z-0 -mt-16 h-svh touch-pan-y overflow-hidden overscroll-x-contain bg-charcoal lg:-mt-20"
     >
       {reel.length > 0 ? (
-        <div className="h-full overflow-hidden motion-reduce:overflow-x-auto">
+        <div ref={viewportRef} className="h-full overflow-hidden">
           <div
-            className="marquee-track animate-marquee flex h-full w-max items-end will-change-transform motion-reduce:animate-none"
-            data-paused={paused ? "true" : "false"}
-            style={{ "--marquee-duration": `${Math.max(reel.length, 1) * 12}s` } as CSSProperties}
+            ref={trackRef}
+            className="flex h-full w-max select-none items-end will-change-transform"
           >
             <Reel frames={frames} reel={reel} onOpen={setOpenIndex} priority />
             <Reel frames={frames} reel={reel} onOpen={setOpenIndex} hidden />
@@ -61,17 +66,17 @@ export function HeroPhotoFeed({ frames }: HeroPhotoFeedProps) {
             <span aria-hidden="true" className="relative hidden h-12 w-px overflow-hidden bg-alabaster/30 sm:block">
               <span className="animate-scroll-cue absolute inset-x-0 top-0 h-1/2 w-full bg-alabaster" />
             </span>
-            <a href="#about" className="eyebrow text-alabaster">
-              Scroll to Explore
+            <a href="#about" className="eyebrow group cursor-pointer py-2 text-alabaster">
+              <span className="underline-draw">Scroll to Explore</span>
             </a>
             {reel.length > 0 ? (
               <button
                 type="button"
                 onClick={() => setPaused((value) => !value)}
-                aria-pressed={paused}
-                className="eyebrow text-alabaster/65 transition-colors duration-500 hover:text-alabaster"
+                aria-label={paused ? "Play photo carousel" : "Pause photo carousel"}
+                className="eyebrow group py-2 text-alabaster/65 transition-colors duration-500 hover:text-alabaster"
               >
-                {paused ? "Play" : "Pause"}
+                <span className="underline-draw">{paused ? "Play" : "Pause"}</span>
               </button>
             ) : null}
           </div>
@@ -143,7 +148,7 @@ function Reel({
             tabIndex={hidden || repeat ? -1 : undefined}
             onClick={() => onOpen(sourceIndex)}
             aria-label={hidden ? undefined : `Open photograph, ${frame.caption}`}
-            className={`group relative shrink-0 overflow-hidden ${
+            className={`group relative shrink-0 overflow-hidden focus-visible:outline-offset-[-4px] ${
               portrait
                 ? "aspect-[3/4] h-auto w-[72vw] sm:h-[62vh] sm:w-auto lg:h-[calc(100svh-9rem)]"
                 : "aspect-[4/3] h-auto w-[84vw] sm:h-[44vh] sm:w-auto lg:h-[calc(100svh-16rem)]"

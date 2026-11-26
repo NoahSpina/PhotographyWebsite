@@ -148,7 +148,7 @@ export function AlbumForm({ album, packages }: AlbumFormProps) {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900"
+          className="rounded-md bg-neutral-900 px-4 py-2 text-sm text-white transition-colors enabled:hover:bg-neutral-700 disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900 dark:enabled:hover:bg-neutral-300"
         >
           {pending ? "Saving…" : isEdit ? "Save changes" : "Create album"}
         </button>

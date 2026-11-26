@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { AlbumForm } from "@/components/admin/album-form";
 import { AlbumList } from "@/components/admin/album-list";
-import { createClient } from "@/lib/supabase/server";
+import { loadSelectionRollups, requireAdminClient } from "@/lib/admin/review-data";
 
 export default function AdminAlbumsPage() {
   return (
@@ -20,13 +20,14 @@ export default function AdminAlbumsPage() {
 }
 
 async function AlbumsContent() {
-  const supabase = await createClient();
-  const [albumsResult, packagesResult] = await Promise.all([
+  const supabase = await requireAdminClient("/admin/albums");
+  const [albumsResult, packagesResult, rollups] = await Promise.all([
     supabase
       .from("albums")
       .select("id, title, status, shoot_date, client_email, is_public_portfolio")
       .order("created_at", { ascending: false }),
     supabase.from("packages").select("id, name, is_active").order("sort_order"),
+    loadSelectionRollups(supabase),
   ]);
 
   if (albumsResult.error) {
@@ -52,7 +53,16 @@ async function AlbumsContent() {
             Albums could not be loaded.
           </p>
         ) : (
-          <AlbumList albums={albumsResult.data ?? []} />
+          <AlbumList
+            albums={(albumsResult.data ?? []).map((album) => {
+              const rollup = rollups?.get(album.id);
+              return {
+                ...album,
+                selectionCount: rollups ? (rollup?.selectionCount ?? 0) : null,
+                notesCount: rollups ? (rollup?.notesCount ?? 0) : null,
+              };
+            })}
+          />
         )}
       </section>
     </>

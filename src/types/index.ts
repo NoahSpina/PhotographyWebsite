@@ -6,6 +6,7 @@ export type {
   OrderStatus,
   OrderType,
   PhotoStatus,
+  RetouchStatus,
   UserRole,
 } from "@/types/database";
 

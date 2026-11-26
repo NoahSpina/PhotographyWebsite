@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { Suspense, useState, useSyncExternalStore } from "react";
+import { NavMark, navLinkClass } from "@/components/layout/nav-link";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { buttonClass } from "@/components/ui/button-styles";
 import { useMotionDialog } from "@/components/ui/use-motion-dialog";
@@ -47,7 +48,7 @@ export function Navbar({
 
       <nav
         aria-label="Primary"
-        className="container-page grid h-16 grid-cols-[1fr_auto] items-center gap-6 lg:h-20 lg:grid-cols-[1fr_auto_1fr]"
+        className="container-page grid h-16 grid-cols-[1fr_auto] items-center gap-6 lg:h-20 lg:grid-cols-[1fr_auto_1fr] lg:gap-7 xl:gap-10"
       >
         <Wordmark className="nav-tone justify-self-start" />
 
@@ -58,8 +59,8 @@ export function Navbar({
         <div className="flex items-center gap-3 justify-self-end sm:gap-7">
           {account}
           <Link href="/book" className={buttonClass({ size: "sm", className: "nav-cta" })}>
-            <span className="sm:hidden">Book</span>
-            <span className="hidden sm:inline">Book a Session</span>
+            <span className="nav-cta-short sm:hidden">Book</span>
+            <span className="nav-cta-long hidden sm:inline">Book a Session</span>
           </Link>
           <button
             type="button"
@@ -91,7 +92,7 @@ function DesktopLinksForCurrentPath() {
 
 function DesktopLinks({ pathname }: { pathname: string | null }) {
   return (
-    <ul className="hidden items-center gap-10 lg:flex">
+    <ul className="hidden items-center gap-7 lg:flex xl:gap-10">
       {siteConfig.nav.map((link) => {
         const active = isActivePath(link.href, pathname);
         return (
@@ -99,17 +100,10 @@ function DesktopLinks({ pathname }: { pathname: string | null }) {
             <Link
               href={link.href}
               aria-current={active ? "page" : undefined}
-              className={`eyebrow group relative block cursor-pointer py-2 ${
-                active ? "nav-tone" : "nav-tone-muted"
-              }`}
+              className={`${navLinkClass} block ${active ? "nav-tone" : "nav-tone-muted"}`}
             >
               {link.label}
-              <span
-                aria-hidden="true"
-                className={`nav-mark absolute inset-x-0 bottom-0 h-px origin-left bg-clay transition-transform duration-700 ease-luxe ${
-                  active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                }`}
-              />
+              <NavMark active={active} />
             </Link>
           </li>
         );
