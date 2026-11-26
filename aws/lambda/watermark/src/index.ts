@@ -41,7 +41,7 @@ type Database = {
 };
 
 const MASTER_KEY_PATTERN =
-  /^masters\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.(jpg|png|webp)$/;
+  /^masters\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:_v(\d+))?\.(jpg|png|webp)$/;
 
 const PROOF_LONG_EDGE = 1200;
 const THUMB_WIDTH = 480;
@@ -91,8 +91,9 @@ async function processRecord(record: S3EventRecord): Promise<void> {
     return;
   }
 
-  const [, albumId, photoId] = match;
-  const log = { bucket, key, albumId, photoId };
+  const [, albumId, photoId, versionPart] = match;
+  const versionSuffix = versionPart ? `_v${versionPart}` : "";
+  const log = { bucket, key, albumId, photoId, versionSuffix };
 
   // Claim the row. Rows already `ready` are skipped so duplicate S3
   // events do not briefly hide a finished photo from the client.
@@ -117,8 +118,8 @@ async function processRecord(record: S3EventRecord): Promise<void> {
     const master = await downloadObject(bucket, key);
     const rendered = await renderDerivatives(master);
 
-    const proofKey = `proofs/${albumId}/${photoId}_proof.webp`;
-    const thumbKey = `proofs/${albumId}/${photoId}_thumb.webp`;
+    const proofKey = `proofs/${albumId}/${photoId}${versionSuffix}_proof.webp`;
+    const thumbKey = `proofs/${albumId}/${photoId}${versionSuffix}_thumb.webp`;
 
     await Promise.all([
       uploadWebp(bucket, proofKey, rendered.proof),

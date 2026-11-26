@@ -1,14 +1,15 @@
 # Watermark Lambda
 
 Runs on S3 `ObjectCreated` events under `masters/`. For each
-`masters/{albumId}/{photoId}.{jpg|png|webp}` it:
+`masters/{albumId}/{photoId}.{jpg|png|webp}` or versioned
+`masters/{albumId}/{photoId}_v{n}.{jpg|png|webp}` it:
 
 1. Marks the `photos` row `processing` (rows already `ready` are skipped).
 2. Downloads the master, auto-orients it, and reads its dimensions.
 3. Writes two watermarked WebP files (quality 65) with
    `Cache-Control: public, max-age=31536000, immutable`:
-   - `proofs/{albumId}/{photoId}_proof.webp`, max 1200px long edge
-   - `proofs/{albumId}/{photoId}_thumb.webp`, max 480px wide
+   - `proofs/{albumId}/{photoId}_proof.webp` or `{photoId}_v{n}_proof.webp`, max 1200px long edge
+   - `proofs/{albumId}/{photoId}_thumb.webp` or `{photoId}_v{n}_thumb.webp`, max 480px wide
 4. Sets `proof_s3_key`, `thumb_s3_key`, `width`, `height`, and
    `status = 'ready'`, or `status = 'failed'` on error. Failures are
    rethrown so Lambda's async retries can recover transient errors.
