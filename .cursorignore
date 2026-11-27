@@ -1,7 +1,8 @@
 node_modules/
-
 .next/
-
-package-lock.json
-
+out/
 aws/lambda/watermark/node_modules/
+aws/lambda/watermark/dist/
+aws/lambda/watermark/.deploy/
+**/*.zip
+.env*.local

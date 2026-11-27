@@ -1,0 +1,14 @@
+---
+description: Additive Supabase migrations, RLS, generated DB types, and the server-only service role.
+globs: ["supabase/**", "src/lib/supabase/**", "src/types/database.ts", "src/app/api/**"]
+alwaysApply: false
+---
+
+# Supabase
+
+- Add a new file under `supabase/migrations/`. Do not edit a migration that has already been applied.
+- Enable RLS in the same migration as any new `public` table. Admin policies call `private.is_admin()`; client policies scope rows with `auth.uid()`.
+- Roles and statuses are `text` plus `check` constraints, not Postgres enums. Mirror each check in `src/types/database.ts` (`UserRole`, `AlbumStatus`, `PhotoStatus`, `RetouchStatus`, `OrderType`, `OrderStatus`).
+- Query through `Database` from `src/types/database.ts`. No `any`, and no column that is not in that file. Update the type file in the same change as the migration.
+- `createAdminClient` in `src/lib/supabase/admin.ts` is `server-only` and bypasses RLS. Never import it from a `'use client'` file. Prefer `createClient` from `src/lib/supabase/server.ts` plus `verifyAdmin()` so RLS still applies.
+- `updated_at` is maintained by `private.set_updated_at()`. Profile role/email and selection retouch fields are already trigger-locked.

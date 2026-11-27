@@ -1,0 +1,11 @@
+---
+description: Server Components, motion/react, and the warm editorial palette.
+globs: ["src/app/(public)/**", "src/app/(client)/**", "src/app/(admin)/**", "src/components/**"]
+alwaysApply: false
+---
+
+# Frontend
+
+- Server Components by default. Add `'use client'` only for state, events, or browser APIs (uploaders, proofing selectors, forms).
+- Animate with `motion/react`. Do not add `framer-motion`. Shared easing is `EASE_LUXE` in `src/lib/motion.ts` and `--ease-luxe` in `src/app/globals.css`.
+- Palette and type live in `src/app/globals.css` `@theme`: alabaster `#faf8f5`, linen `#f2eee8`, espresso `#2c2621`, ink `#171614`, stone `#6b665e`, hairline `#e5dfd6`, clay `#8c6a4a`, charcoal `#141413`. Serif is Cormorant (`font-serif`); sans is Plus Jakarta (`font-sans`). Page width is `container-page`; small caps labels use `eyebrow`.

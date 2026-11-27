@@ -1,0 +1,5 @@
+package-lock.json
+aws/lambda/watermark/package-lock.json
+supabase/migrations/*.sql
+src/data/journal.ts
+README.md

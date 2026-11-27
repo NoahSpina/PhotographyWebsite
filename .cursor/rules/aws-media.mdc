@@ -1,0 +1,15 @@
+---
+description: Direct S3 transfers, immutable versioned proof keys, and the isolated watermark Lambda.
+globs: ["aws/**", "src/lib/aws/**", "src/app/api/uploads/**", "src/app/api/downloads/**", "src/app/api/admin/photos/**"]
+alwaysApply: false
+---
+
+# AWS media
+
+- Browsers upload and download through short-lived pre-signed URLs (`createPresignedPutUrl`, `createPresignedGetUrl`). Route handlers return JSON only; they never stream photo bytes.
+- Master keys: `masters/{albumId}/{photoId}.{ext}` and, from version 2, `masters/{albumId}/{photoId}_v{n}.{ext}` (`masterObjectKey`, `versionedMasterObjectKey`).
+- `handler` in `aws/lambda/watermark/src/index.ts` writes immutable WebP: `proofs/{albumId}/{photoId}[_v{n}]_proof.webp` and `_thumb.webp` with a one-year `Cache-Control`. Bump `photos.version` instead of overwriting a published proof key.
+- CloudFront serves `proofs/*` only (`proofUrl`, `isProofKey`). Never publish `masters/*` on the CDN.
+- Delete and replace must remove old objects with `deleteS3Objects`, including `superseded_s3_keys`. Abort must not leave an unreferenced master behind.
+- `aws/` is excluded from the root `tsconfig.json`. Do not import `src/` from the Lambda package, or add the Lambda to the Next.js build.
+- The S3 trigger prefix is `masters/` only. A trigger on `proofs/` would invoke the function on its own writes.
